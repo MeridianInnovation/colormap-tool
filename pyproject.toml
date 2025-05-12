@@ -17,11 +17,15 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 
 ]
+dependencies = ["numpy>=2.2.5"]
 
 [project.urls]
 Homepage = "https://MeridianInnovation.github.io/colormap-tool/"
 Repository = "https://github.com/MeridianInnovation/colormap-tool"
 Documentation = "https://MeridianInnovation.github.io/colormap-tool/"
+
+[project.optional-dependencies]
+optional = ["matplotlib>=3.10.1", "opencv-python>=4.11.0.86"]
 
 [dependency-groups]
 dev = [
@@ -35,11 +39,17 @@ dev = [
     "mkdocs>=1.4.2",
     "mkdocs-material>=8.5.10",
     "mkdocstrings[python]>=0.26.1",
+    "matplotlib>=3.10.1",
+    "opencv-python>=4.11.0.86",
     "mkdocs-include-markdown-plugin>=7.1.5",
 ]
+
 [build-system]
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+"colormap_tool" = ["resources/*"]
 
 [tool.mypy]
 files = ["src"]
