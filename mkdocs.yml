@@ -10,6 +10,11 @@ copyright: Maintained by <a href="https://www.meridianinno.com/">MeridianInnovat
 nav:
   - Home:
       - Overview: index.md
+      - Usage: home/usage.md
+      - Changelog: home/changelog.md
+      - License: home/license.md
+  - API Reference: API/api_reference.md
+
 plugins:
   - search
   - mkdocstrings:
