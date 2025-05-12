@@ -1,0 +1,59 @@
+site_name: colormap-tool
+repo_url: https://github.com/MeridianInnovation/colormap-tool
+site_url: https://MeridianInnovation.github.io/colormap-tool
+site_description: A Colormap Tool package to convert cmps between cv and mpl.
+site_author: Meridian Innovation
+edit_uri: edit/main/docs/
+repo_name: MeridianInnovation/colormap-tool
+copyright: Maintained by <a href="https://www.meridianinno.com/">MeridianInnovation</a>.
+
+nav:
+  - Home:
+      - Overview: index.md
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["src/colormap_tool"]
+          options:
+            docstring_style: numpy
+            parameter_headings: true
+            show_root_heading: true
+  - include-markdown
+
+theme:
+  name: material
+  feature:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/MeridianInnovation/colormap-tool
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/colormap-tool
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true

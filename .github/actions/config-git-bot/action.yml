@@ -1,0 +1,17 @@
+# From: https://github.com/drengskapur/gitbot-config
+name: "Configure GitHub Actions Bot"
+description: "Configures Git globally to use GitHub Actions bot as committer"
+branding:
+  icon: "git-branch"
+  color: "blue"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Git
+      run: |
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+      shell: bash

@@ -1,0 +1,89 @@
+name: Pre-release and Hotfix
+# This workflow is used to pre-release and hotfix.
+# Once a release or hotfix branch is created, this workflow will be triggered.
+# It will generate a release draft, so you can check the changes before merging.
+
+on:
+  push:
+    branches:
+      - "release/**"
+      - "hotfix/**"
+
+jobs:
+  get-next-version:
+    name: Get next version
+    runs-on: ubuntu-latest
+    outputs:
+      next_version: ${{ steps.check_bump.outputs.next_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Configure Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Check if nothing to bump
+        id: check_bump
+        run: |
+          next_version=$(uvx --from commitizen cz bump --get-next --yes)
+          echo "next_version=$next_version" >> $GITHUB_OUTPUT
+          if [ -z "$next_version" ]; then
+            exit 1
+          fi
+        continue-on-error: true
+
+      - name: Check if tag exists
+        id: check_tag
+        if: ${{ steps.check_bump.outcome == 'success' }}
+        run: |
+          tag_exists=$(git tag -l v${{ steps.check_bump.outputs.next_version }})
+          echo "tag_exists=$tag_exists" >> $GITHUB_OUTPUT
+          if [ -n "$tag_exists" ]; then
+            exit 1
+          fi
+
+  release-draft:
+    runs-on: ubuntu-latest
+    needs: get-next-version
+    if: ${{ needs.get-next-version.outputs.next_version != '' }}
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Configure Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Bump version and generate changelog
+        id: bump
+        run: |
+          uvx --from commitizen cz bump --yes --changelog --retry --changelog-to-stdout --git-output-to-stderr > body.md
+
+      - name: Build package
+        run: uv build
+
+      - name: Create release draft
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ needs.get-next-version.outputs.next_version }}
+          tag_name: v${{ needs.get-next-version.outputs.next_version }}
+          body_path: body.md
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          draft: true
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}

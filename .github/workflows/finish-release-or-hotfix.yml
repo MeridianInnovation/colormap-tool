@@ -1,0 +1,101 @@
+name: Finish release or hotfix
+# This workflow is used to finish a release or hotfix.
+# It will create a Pull Request to merge the release or hotfix branch to main.
+# If auto-merge is true, it will merge the Pull Request automatically.
+
+run-name: Finish a ${{ inputs.type }}.
+
+env:
+  MAIN_BRANCH: main
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: Type of release or hotfix, you need to choose correct branch to finish.
+        required: true
+        default: release
+        type: choice
+        options:
+          - release
+          - hotfix
+      auto-merge:
+        description: If true, will merge the release branch to main automatically.
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  check-branch:
+    outputs:
+      branch: ${{ steps.check-branch.outputs.branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check branch
+        id: check-branch
+        run: |
+          if [[ "${{ github.ref_name }}" == ${{ inputs.type }}/* ]]; then
+            echo "Branch exists: ${{ github.ref_name }}"
+            echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "Branch does not exist or is not a ${{ inputs.type }} branch"
+            echo "branch=" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+  create-pr:
+    runs-on: ubuntu-latest
+    needs: check-branch
+    if: ${{ needs.check-branch.outputs.branch != '' }}
+    outputs:
+      pr_url: ${{ steps.create-pr.outputs.pr_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Create Pull Request
+        id: create-pr
+        run: |
+          pr_url=$(
+            gh pr create \
+              --base ${{ env.MAIN_BRANCH }} \
+              --head ${{ needs.check-branch.outputs.branch }} \
+              --title "${{ needs.check-branch.outputs.branch }}" \
+              --fill-verbose
+          )
+          echo "pr_url=$pr_url" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  merge-pr:
+    runs-on: ubuntu-latest
+    needs: create-pr
+    if: ${{ inputs.auto-merge == true && needs.create-pr.outputs.pr_url != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Config Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Merge to main
+        run: |
+          gh pr merge ${{ needs.create-pr.outputs.pr_url }} \
+            --auto \
+            --merge \
+            --delete-branch \
+        env:
+          GH_TOKEN: ${{ secrets.BOT_ACCESS_TOKEN }}

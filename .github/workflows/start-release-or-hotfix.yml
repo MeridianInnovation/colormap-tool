@@ -1,0 +1,136 @@
+name: Start release or hotfix
+# This workflow is used to start a release or hotfix.
+# It will create a release or hotfix branch and wait for further updates.
+# You can do some tests and bug fixes on the release or hotfix branch.
+# When the release or hotfix is ready, you can trigger the `Finish release` or `Finish hotfix` workflow to start a Pull Request to merge the release or hotfix branch to main.
+run-name: Start a ${{ inputs.type }}.
+
+env:
+  RELEASE_SOURCE_BRANCH: develop
+  HOTFIX_SOURCE_BRANCH: main
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: Type of release or hotfix
+        required: true
+        default: release
+        type: choice
+        options:
+          - release
+          - hotfix
+
+      hotfix-name:
+        description: Suffix of the hotfix branch name, e.g. `issue-123`
+        required: false
+        default: "issue-"
+        type: string
+
+jobs:
+  start-release:
+    if: inputs.type == 'release'
+    runs-on: ubuntu-latest
+    outputs:
+      release_branch: ${{ steps.create-release-branch.outputs.release_branch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Print current branch
+        run: |
+          echo "Current branch: ${{ github.ref_name }}"
+
+      - name: Check source branch
+        run: |
+          if [ "${{ github.ref_name }}" != "$RELEASE_SOURCE_BRANCH" ]; then
+            echo "Source branch is not $RELEASE_SOURCE_BRANCH"
+            exit 1
+          fi
+
+      - name: Configure Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Check existing release branch
+        run: |
+          release_branch=$(git branch -r --list "origin/release/*")
+          if [ -n "$release_branch" ]; then
+            echo "Release branch already exists: $release_branch"
+            exit 1
+          else
+            echo "Release branch does not exist"
+          fi
+
+      - name: Get next version
+        id: get-next-version
+        run: |
+          next_version=$(uvx --from commitizen cz bump --get-next --yes)
+          echo "next_version=$next_version" >> $GITHUB_OUTPUT
+          if [ -z "$next_version" ]; then
+            echo "No version to bump"
+            exit 1
+          else
+            echo "Next version: $next_version"
+            echo "next_version=$next_version" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create release branch
+        id: create-release-branch
+        run: |
+          git checkout -b release/v$next_version
+          echo "Release branch created: release/v$next_version"
+          echo "release_branch=release/v$next_version" >> $GITHUB_OUTPUT
+        env:
+          next_version: ${{ steps.get-next-version.outputs.next_version }}
+
+      - name: Push release branch
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          branch: ${{ steps.create-release-branch.outputs.release_branch }}
+          tags: true
+
+  start-hotfix:
+    if: inputs.type == 'hotfix'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Check source branch
+        run: |
+          if [ "${{ github.ref_name }}" != "$HOTFIX_SOURCE_BRANCH" ]; then
+            echo "Source branch is not $HOTFIX_SOURCE_BRANCH"
+            exit 1
+          fi
+
+      - name: Create hotfix branch
+        id: create-hotfix-branch
+        run: |
+          git checkout -b hotfix/$hotfix_name
+          echo "Hotfix branch created: hotfix/$hotfix_name"
+          echo "hotfix_branch=hotfix/$hotfix_name" >> $GITHUB_OUTPUT
+        env:
+          hotfix_name: ${{ inputs.hotfix-name }}
+
+      - name: Print hotfix branch
+        run: |
+          echo "Hotfix branch: ${{ steps.create-hotfix-branch.outputs.hotfix_branch }}"
+
+      - name: Push hotfix branch
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          branch: ${{ steps.create-hotfix-branch.outputs.hotfix_branch }}
+          tags: true

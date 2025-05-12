@@ -1,0 +1,151 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  MAIN_BRANCH: "main"
+
+jobs:
+  check-version:
+    name: Check the version consistency
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from pyproject.toml
+        id: get_version
+        run: |
+          version=$(grep -oP '^version\s*=\s"\K[^"]+' pyproject.toml)
+          echo "version=v${version}" >> $GITHUB_OUTPUT
+
+      - name: Check version
+        run: |
+          if [[ ${{ steps.get_version.outputs.version }} != ${{ github.ref_name }}* ]]; then
+            echo "::error::Version mismatch!"
+            echo "Version in pyproject.toml: ${{ steps.get_version.outputs.version }}"
+            echo "Tag name: ${{ github.ref_name }}"
+            exit 1
+          fi
+          echo "Version matches the tag name."
+
+  build-sdists-and-wheels:
+    name: Build sdists and wheels
+    runs-on: ubuntu-latest
+    needs: check-version
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Build sdist
+        run: uv build --sdist
+
+      - name: Build wheels
+        run: uv build --wheel
+
+      - name: Upload sdists and wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  deploy-docs:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+    needs: build-sdists-and-wheels
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Build documentation
+        run: uv run mkdocs build
+
+      - name: Deploy documentation
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+
+  release-to-github:
+    name: Release to GitHub
+    runs-on: ubuntu-latest
+    needs: build-sdists-and-wheels
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download sdists and wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Get changelog body
+        run: |
+          awk '
+          /^## / {
+              if (p) {
+                  exit
+              }
+              p=1;
+          }
+          p { print }
+          ' CHANGELOG.md > body.md
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: body.md
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          draft: false
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: build-sdists-and-wheels
+
+    permissions:
+      id-token: write
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up the environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Download sdists and wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to PyPI
+        run: uv publish --index pypi --trusted-publishing always

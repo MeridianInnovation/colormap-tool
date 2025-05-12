@@ -1,0 +1,109 @@
+name: Bump version
+
+on:
+  push:
+    branches:
+      - "main"
+
+env:
+  BACK_TO_DEVELOPMENT: true
+  DEVELOP_BRANCH: "develop"
+  MAIN_BRANCH: "main"
+
+jobs:
+  bump-version-and-changelog:
+    name: Bump version and generate changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      new_sha: ${{ steps.get-sha.outputs.sha }}
+      back_to_develop: ${{ steps.check_back_to_development.outputs.back_to_develop }}
+    # Skip this job if the commit message starts with 'bump:' as it's already a bump commit
+    if: ${{ !startsWith(github.event.head_commit.message, 'bump:') && !contains(github.event.head_commit.message, 'Initial commit') }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Configure Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Setup Python environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Check if nothing to bump
+        id: check_bump
+        run: |
+          next_version=$(uv run cz bump --get-next --yes)
+          echo "next_version=$next_version" >> $GITHUB_OUTPUT
+          if [ -z "$next_version" ]; then
+            exit 1
+          fi
+        continue-on-error: true
+
+      - name: Check if duplicate release
+        if: ${{ steps.check_bump.outcome == 'success' }}
+        id: check_duplicate
+        run: |
+          tag_exists=$(git tag -l v${{ steps.check_bump.outputs.next_version }})
+          echo "tag_exists=$tag_exists" >> $GITHUB_OUTPUT
+          if [ -n "$tag_exists" ]; then
+            exit 1
+          fi
+
+      - name: Bump version and generate changelog
+        if: ${{ steps.check_bump.outcome == 'success' }}
+        id: bump
+        run: |
+          uv run cz bump --yes --changelog --changelog-to-stdout --git-output-to-stderr > body.md
+
+      - name: push bump commit
+        if: ${{ steps.bump.outcome == 'success' }}
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          branch: ${{ github.ref }}
+          tags: true
+
+      - name: Get the new commit SHA
+        if: ${{ steps.bump.outcome == 'success' }}
+        id: get-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Check if back to development
+        if: ${{ env.BACK_TO_DEVELOPMENT == 'true' }}
+        id: check_back_to_development
+        run: |
+          echo "back_to_develop=true" >> $GITHUB_OUTPUT
+
+  back-to-development:
+    runs-on: ubuntu-latest
+    needs: bump-version-and-changelog
+    if: ${{ needs.bump-version-and-changelog.outputs.back_to_develop == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.DEVELOP_BRANCH }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Back to development
+        run: |
+          git fetch --all
+          git pull --all
+          git merge --no-ff --no-edit origin/${{ env.MAIN_BRANCH }}
+
+      - name: Push to development
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          branch: ${{ env.DEVELOP_BRANCH }}
