@@ -43,9 +43,13 @@ dev = [
     "opencv-python>=4.11.0.86",
     "mkdocs-include-markdown-plugin>=7.1.5",
 ]
+
 [build-system]
 requires = ["wheel", "setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-data]
+"colormap_tool" = ["resources/*"]
 
 [tool.mypy]
 files = ["src"]
