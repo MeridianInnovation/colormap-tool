@@ -41,7 +41,7 @@ jobs:
 
   code-quality-checks:
     needs: check-should-skip
-    if: ${{ needs.check-should-skip.outputs.should_skip }} == false
+    if: needs.check-should-skip.outputs.should_skip == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -70,7 +70,7 @@ jobs:
   tests-on-multiple-python-versions:
     name: Tests ON ${{ matrix.python-version }}
     needs: check-should-skip
-    if: ${{ needs.check-should-skip.outputs.should_skip }} == false
+    if: needs.check-should-skip.outputs.should_skip == 'false'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -90,7 +90,7 @@ jobs:
 
   check-docs:
     needs: check-should-skip
-    if: ${{ needs.check-should-skip.outputs.should_skip }} == false
+    if: needs.check-should-skip.outputs.should_skip == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Check out
