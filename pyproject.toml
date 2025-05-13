@@ -134,7 +134,7 @@ DEP003 = ["colormap_tool"]
 
 name = "pypi"
 url = "https://pypi.org/simple"
-publish-url = "https://pypi.python.org/pypi"
+publish-url = "https://upload.pypi.org/legacy/"
 
 [[tool.uv.index]]
 
