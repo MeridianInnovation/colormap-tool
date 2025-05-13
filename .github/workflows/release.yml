@@ -4,7 +4,23 @@ on:
   push:
     tags:
       - "v*"
-
+  workflow_dispatch:
+    inputs:
+      deploy-docs:
+        description: "Deploy docs to GitHub Pages"
+        type: boolean
+        required: false
+        default: false
+      release-to-github:
+        description: "Release to GitHub"
+        type: boolean
+        required: false
+        default: false
+      publish-to-pypi:
+        description: "Publish to PyPI"
+        type: boolean
+        required: false
+        default: false
 env:
   MAIN_BRANCH: "main"
 
@@ -26,7 +42,8 @@ jobs:
           version=$(grep -oP '^version\s*=\s"\K[^"]+' pyproject.toml)
           echo "version=v${version}" >> $GITHUB_OUTPUT
 
-      - name: Check version
+      - name: Check version of the tag
+        if: ${{ github.event_name == 'push' }}
         run: |
           if [[ ${{ steps.get_version.outputs.version }} != ${{ github.ref_name }}* ]]; then
             echo "::error::Version mismatch!"
@@ -63,6 +80,7 @@ jobs:
   deploy-docs:
     name: Deploy docs
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy-docs == true)
     needs: build-sdists-and-wheels
 
     permissions:
@@ -82,16 +100,18 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          personal_token: ${{ secrets.BOT_ACCESS_TOKEN }}
           publish_dir: ./site
 
   release-to-github:
     name: Release to GitHub
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.release-to-github == true)
     needs: build-sdists-and-wheels
 
     permissions:
       contents: write
-      id-token: write
+      packages: write
 
     steps:
       - name: Checkout
@@ -127,12 +147,12 @@ jobs:
   publish-to-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish-to-pypi == true)
     needs: build-sdists-and-wheels
 
     permissions:
       id-token: write
       contents: write
-      packages: write
 
     steps:
       - name: Checkout
