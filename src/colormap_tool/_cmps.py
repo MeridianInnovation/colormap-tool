@@ -1,5 +1,4 @@
-"""
-Colormap storage and loading module.
+"""Colormap storage and loading module.
 
 This module loads colormap data from pickle files stored in the resources directory.
 Each colormap is stored as a numpy array with shape (256, 1, 3) and dtype uint8.

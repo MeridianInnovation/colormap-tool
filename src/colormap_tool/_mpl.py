@@ -17,7 +17,7 @@ from colormap_tool._cmps import CMPSPACE
 if TYPE_CHECKING:
     from matplotlib.colors import Colormap
 
-_cached_colormaps: "dict[str, dict[str, Colormap]]" = defaultdict(dict)
+_cached_colormaps: dict[str, dict[str, Colormap]] = defaultdict(dict)
 
 _is_registered = False
 
@@ -25,8 +25,7 @@ __all__ = ["get_mpl_colormaps", "register_all_cmps2mpl", "uint8_rgb_arr2mpl_cmp"
 
 
 def register_all_cmps2mpl() -> None:
-    """
-    Register all available colormaps with the matplotlib.colormaps registry.
+    """Register all available colormaps with the matplotlib.colormaps registry.
 
     This function iterates through all namespaces and colormap names in CMPSPACE
     and registers each colormap with matplotlib. After calling this function,
@@ -37,6 +36,7 @@ def register_all_cmps2mpl() -> None:
     >>> register_all_cmps2mpl()
     >>> import matplotlib.pyplot as plt
     >>> plt.imshow(data, cmap="cv.VIRIDIS")
+
     """
     try:
         import matplotlib as mpl
@@ -54,9 +54,8 @@ def register_all_cmps2mpl() -> None:
     _is_registered = True
 
 
-def get_mpl_colormaps(name: str, namespace: Optional[str] = None) -> "Colormap":
-    """
-    Get a colormap in Matplotlib format.
+def get_mpl_colormaps(name: str, namespace: str | None = None) -> Colormap:
+    """Get a colormap in Matplotlib format.
 
     Parameters
     ----------
@@ -92,6 +91,7 @@ def get_mpl_colormaps(name: str, namespace: Optional[str] = None) -> "Colormap":
     >>> # Or equivalently
     >>> cmap = get_mpl_colormaps("cv.VIRIDIS")
     >>> plt.imshow(data, cmap=cmap)
+
     """
     try:
         import matplotlib as mpl
@@ -115,16 +115,21 @@ def get_mpl_colormaps(name: str, namespace: Optional[str] = None) -> "Colormap":
     else:
         if name not in _cached_colormaps[namespace]:
             _cached_colormaps[namespace][name] = uint8_rgb_arr2mpl_cmp(
-                CMPSPACE[namespace][name], ".".join([namespace, name]), alpha=1.0, mode="listed"
+                CMPSPACE[namespace][name],
+                f"{namespace}.{name}",
+                alpha=1.0,
+                mode="listed",
             )
         return _cached_colormaps[namespace][name]
 
 
 def uint8_rgb_arr2mpl_cmp(
-    arr: np.ndarray, name: str, alpha: float = 1.0, mode: Literal["listed", "linear"] = "listed"
-) -> "Colormap":
-    """
-    Convert a uint8 RGB array to a Matplotlib Colormap object.
+    arr: np.ndarray,
+    name: str,
+    alpha: float = 1.0,
+    mode: Literal["listed", "linear"] = "listed",
+) -> Colormap:
+    """Convert a uint8 RGB array to a Matplotlib Colormap object.
 
     Parameters
     ----------
@@ -157,6 +162,7 @@ def uint8_rgb_arr2mpl_cmp(
     Notes
     -----
     The function converts the uint8 values [0-255] to float values [0-1] required by Matplotlib.
+
     """
     try:
         from matplotlib.colors import LinearSegmentedColormap, ListedColormap

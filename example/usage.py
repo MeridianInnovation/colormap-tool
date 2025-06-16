@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Example usage of the colormap-tools package.
+"""Example usage of the colormap-tools package.
 
 This file contains examples from the README.md file, organized into functions
 that can be run individually or imported and tested.
@@ -49,7 +48,7 @@ def example_using_colormaps_with_opencv(display=True):
     if display:
         # Display the image (note: OpenCV uses BGR format)
         colored_img_rgb = cv2.cvtColor(colored_img, cv2.COLOR_BGR2RGB)  # Convert to RGB for display
-        cv2.imshow("Colored Image", colored_img)
+        cv2.imshow("Colored Image", colored_img_rgb)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
@@ -102,7 +101,7 @@ def example_registering_colormaps_with_matplotlib(display=True):
 
 def example_converting_rgb_arrays_to_matplotlib_colormaps(display=True):
     """Example of converting RGB arrays to matplotlib colormaps."""
-    # Create a custom RGB array (256×3 uint8 values)
+    # Create a custom RGB array (256x3 uint8 values)
     rgb_data = np.zeros((256, 3), dtype=np.uint8)
     # Fill with a gradient from blue to red
     rgb_data[:, 0] = np.linspace(0, 255, 256)  # Red channel

@@ -16,9 +16,8 @@ from colormap_tool._cmps import CMPSPACE
 __all__ = ["get_cv_colormaps"]
 
 
-def get_cv_colormaps(name: str, namespace: Optional[str] = None, return_arr: bool = False) -> int | np.ndarray:
-    """
-    Get a BGR colormap in OpenCV format.
+def get_cv_colormaps(name: str, namespace: str | None = None, return_arr: bool = False) -> int | np.ndarray:
+    """Get a BGR colormap in OpenCV format.
 
     Note: The returned array is not in RGB format, but in BGR format!
 
@@ -62,6 +61,7 @@ def get_cv_colormaps(name: str, namespace: Optional[str] = None, return_arr: boo
     >>> # Or equivalently
     >>> cmap = get_cv_colormaps("mpl.viridis")
     >>> colored_img = cv2.applyColorMap(gray_img, cmap)
+
     """
     try:
         import cv2
@@ -88,9 +88,8 @@ def get_cv_colormaps(name: str, namespace: Optional[str] = None, return_arr: boo
         return bgr_arr
 
 
-def apply_colormap_with_numpy(src: np.ndarray, cmp: np.ndarray, dst: Optional[np.ndarray] = None) -> np.ndarray:
-    """
-    Apply a colormap to an image using numpy instead of OpenCV.
+def apply_colormap_with_numpy(src: np.ndarray, cmp: np.ndarray, dst: np.ndarray | None = None) -> np.ndarray:
+    """Apply a colormap to an image using numpy instead of OpenCV.
 
     Parameters
     ----------
@@ -105,13 +104,14 @@ def apply_colormap_with_numpy(src: np.ndarray, cmp: np.ndarray, dst: Optional[np
     -------
     numpy.ndarray
         The output array with the colormap applied.
+
     """
     if dst is None:
         dst = np.zeros_like(src)
     else:
         if dst.shape != src.shape:
             raise ValueError(
-                f"The shape of the output array {dst.shape} does not match the shape of the input array {src.shape}."
+                f"The shape of the output array {dst.shape} does not match the shape of the input array {src.shape}.",
             )
 
     if src.dtype != np.uint8:
