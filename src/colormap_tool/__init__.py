@@ -9,12 +9,13 @@ and dtype uint8. These colormaps can then be converted to the appropriate format
 library.
 
 Main components:
-- _cmps.py: Loads and stores colormap data from pickle files
-- _cv.py: Provides colormaps in OpenCV format
-- _mpl.py: Provides colormaps in Matplotlib format
+
+  - _cmps.py: Loads and stores colormap data from pickle files, provides RGB format colormaps and resampling utilities
+  - _cv.py: Provides colormaps in OpenCV format (BGR)
+  - _mpl.py: Provides colormaps in Matplotlib format
 """
 
-from colormap_tool._cmps import CMPSPACE, CV_COLORMAPS, MPL_COLORMAPS
+from colormap_tool._cmps import CMPSPACE, CV_COLORMAPS, MPL_COLORMAPS, get_colormaps, resample_lut
 from colormap_tool._cv import apply_colormap_with_numpy, get_cv_colormaps
 from colormap_tool._mpl import get_mpl_colormaps, register_all_cmps2mpl, uint8_rgb_arr2mpl_cmp
 
@@ -23,8 +24,10 @@ __all__ = [
     "CV_COLORMAPS",
     "MPL_COLORMAPS",
     "apply_colormap_with_numpy",
+    "get_colormaps",
     "get_cv_colormaps",
     "get_mpl_colormaps",
     "register_all_cmps2mpl",
+    "resample_lut",
     "uint8_rgb_arr2mpl_cmp",
 ]

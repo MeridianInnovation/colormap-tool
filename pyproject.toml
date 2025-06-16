@@ -5,19 +5,21 @@ description = "A Colormap Tool package to convert cmps between cv and mpl."
 authors = [{ name = "Meridian Innovation", email = "info@meridianinno.com" }]
 readme = "README.md"
 keywords = ['python']
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.9,<4.0"
 classifiers = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
 
 ]
-dependencies = ["numpy>=2.2.5"]
+dependencies = [
+    "numpy>=2.0.2",
+]
 
 [project.urls]
 Homepage = "https://MeridianInnovation.github.io/colormap-tool/"
@@ -25,7 +27,7 @@ Repository = "https://github.com/MeridianInnovation/colormap-tool"
 Documentation = "https://MeridianInnovation.github.io/colormap-tool/"
 
 [project.optional-dependencies]
-optional = ["matplotlib>=3.10.1", "opencv-python>=4.11.0.86"]
+optional = ["matplotlib>=3.9.4", "opencv-python>=4.11.0.86"]
 
 [dependency-groups]
 dev = [
@@ -39,7 +41,7 @@ dev = [
     "mkdocs>=1.4.2",
     "mkdocs-material>=8.5.10",
     "mkdocstrings[python]>=0.26.1",
-    "matplotlib>=3.10.1",
+    "matplotlib>=3.9.4",
     "opencv-python>=4.11.0.86",
     "mkdocs-include-markdown-plugin>=7.1.5",
 ]
@@ -73,48 +75,20 @@ src = ["src", "tests", "example"]
 
 
 [tool.ruff.lint]
-select = [
-    # flake8-2020
-    "YTT",
-    # flake8-bandit
-    "S",
-    # flake8-bugbear
-    "B",
-    # flake8-builtins
-    "A",
-    # flake8-comprehensions
-    "C4",
-    # flake8-debugger
-    "T10",
-    # flake8-simplify
-    "SIM",
-    # isort
-    "I",
-    # mccabe
-    "C90",
-    # pycodestyle
-    "E",
-    "W",
-    # pyflakes
-    "F",
-    # pygrep-hooks
-    "PGH",
-    # pyupgrade
-    "UP",
-    # ruff
-    "RUF",
-    # tryceratops
-    "TRY",
-]
+select = ["ALL"]
 ignore = [
-    # DoNotAssignLambda
-    "E731",
-    # raise-vanilla-args
-    "TRY003",
+  "TD", "N", "C", "T",
+  "D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107", "D401",
+  "A", "ANN",
+  "FIX",
+  "PLR", "FBT",
+  "RET", "EM", "ERA", "BLE", "SLF", "TRY",
 ]
+fixable = ["ALL"]
+unfixable = ["F401"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101"]
+"tests/*.py" = ["S101"]
 
 [tool.ruff.format]
 preview = true
@@ -134,7 +108,7 @@ DEP003 = ["colormap_tool"]
 
 name = "pypi"
 url = "https://pypi.org/simple"
-publish-url = "https://pypi.python.org/pypi"
+publish-url = "https://upload.pypi.org/legacy/"
 
 [[tool.uv.index]]
 

@@ -1,0 +1,46 @@
+name: Backpoint commits
+
+on:
+  workflow_dispatch:
+    inputs:
+      target-ref:
+        description: "Target branch, tag or commit"
+        required: false
+        default: "develop"
+        type: string
+
+  workflow_call:
+    inputs:
+      target-ref:
+        description: "Target branch, tag or commit"
+        required: false
+        default: "develop"
+        type: string
+
+jobs:
+  backpoint:
+    name: Backpoint commits from ${{ github.ref_name }} to ${{ inputs.target-ref }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.target-ref }}
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
+
+      - name: Configure Git bot
+        uses: ./.github/actions/config-git-bot
+
+      - name: Backpoint commits
+        run: |
+          git fetch origin ${{ github.ref_name }}:${{ github.ref_name }}
+          git merge --no-ff --no-edit ${{ github.ref_name }}
+
+      - name: Push to ${{ inputs.target-ref }}
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.BOT_ACCESS_TOKEN }}
+          force_with_lease: true
