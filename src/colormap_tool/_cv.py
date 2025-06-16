@@ -5,6 +5,8 @@ It can return both built-in OpenCV colormaps (as integer constants) and custom c
 from other sources (as numpy arrays).
 """
 
+from __future__ import annotations
+
 from typing import Optional
 
 import numpy as np

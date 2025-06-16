@@ -5,6 +5,8 @@ It can convert colormap arrays from various sources into Matplotlib Colormap obj
 with the matplotlib.colormaps registry.
 """
 
+from __future__ import annotations
+
 from collections import defaultdict
 from typing import TYPE_CHECKING, Literal, Optional
 
