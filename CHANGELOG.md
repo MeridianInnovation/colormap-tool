@@ -1,3 +1,14 @@
+## v1.0.0 (2025-06-16)
+
+### Feat
+
+- Add `get_colormaps` and `resample_lut`
+- Add support to py3.9
+
+### Refactor
+
+- Update linting settings and fix some format issue.
+
 ## v0.2.0 (2025-05-12)
 
 ### Feat

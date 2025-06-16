@@ -1,6 +1,6 @@
 [project]
 name = "colormap-tool"
-version = "0.2.0"
+version = "1.0.0"
 description = "A Colormap Tool package to convert cmps between cv and mpl."
 authors = [{ name = "Meridian Innovation", email = "info@meridianinno.com" }]
 readme = "README.md"
