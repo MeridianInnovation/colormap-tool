@@ -68,7 +68,6 @@ def test_cv_to_mpl_conversion(test_image):
 
 def test_apply_colormap_with_numpy(test_image):
     """Test applying a colormap using numpy."""
-
     # Get a colormap
     cmap = get_cv_colormaps("viridis", "cv", return_arr=True)
 
