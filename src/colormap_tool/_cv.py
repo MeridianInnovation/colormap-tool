@@ -17,50 +17,37 @@ __all__ = ["get_cv_colormaps"]
 
 
 def get_cv_colormaps(name: str, namespace: str | None = None, return_arr: bool = False) -> int | np.ndarray:
-    """Get a BGR colormap in OpenCV format.
+    """Return a colormap suitable for OpenCV's cv2.applyColorMap.
 
-    Note: The returned array is not in RGB format, but in BGR format!
+    - If the colormap is an OpenCV built-in, returns the OpenCV integer constant (e.g., cv2.COLORMAP_JET).
+    - If the colormap is from Matplotlib or custom, returns a (256, 1, 3) uint8 LUT in BGR order,
+      which can be passed directly to cv2.applyColorMap.
 
     Parameters
     ----------
     name : str
-        The name of the colormap. If namespace is None, this should be in the format
-        "namespace.name" (e.g., "cv.VIRIDIS", "mpl.viridis").
-    namespace : Optional[str], optional
-        The namespace of the colormap ("cv", "mpl"). If provided, the name
-        parameter should not include the namespace prefix.
+        Colormap name. If namespace is None, use "namespace.name" format (e.g., "cv.jet", "mpl.viridis").
+    namespace : str, optional
+        "cv" for OpenCV, "mpl" for Matplotlib. If provided, name should not include a dot.
     return_arr : bool, optional
-        If True, always returns a numpy array, even for built-in OpenCV colormaps.
-        If False, returns an integer constant for built-in OpenCV colormaps and a numpy
-        array for other colormaps.
-        Default is False.
+        If True, always return a LUT array (never an OpenCV constant).
 
     Returns
     -------
-    int or numpy.ndarray
-        For OpenCV built-in colormaps (namespace="cv"), returns the integer constant
-        that can be passed to cv2.applyColorMap().
-        For other colormaps, returns a numpy array with shape (256, 1, 3) and dtype uint8
-        that can be used with cv2.applyColorMap(img, colormap).
+    int or np.ndarray
+        OpenCV colormap constant or a (256, 1, 3) uint8 LUT in BGR order.
 
     Raises
     ------
-    AssertionError
-        If the namespace is not recognized or the colormap name is not found in the namespace.
+    ValueError
+        If the colormap or namespace is not found.
 
     Examples
     --------
-    >>> # Get an OpenCV built-in colormap
-    >>> cmap = get_cv_colormaps("VIRIDIS", "cv")
-    >>> # Or equivalently
-    >>> cmap = get_cv_colormaps("cv.VIRIDIS")
-    >>> colored_img = cv2.applyColorMap(gray_img, cmap)
-
-    >>> # Get a matplotlib colormap for use with OpenCV
-    >>> cmap = get_cv_colormaps("viridis", "mpl")
-    >>> # Or equivalently
-    >>> cmap = get_cv_colormaps("mpl.viridis")
-    >>> colored_img = cv2.applyColorMap(gray_img, cmap)
+    >>> lut = get_cv_colormaps("mpl.viridis")
+    >>> img_color = cv2.applyColorMap(gray_img, lut)
+    >>> lut2 = get_cv_colormaps("jet", "cv")
+    >>> img_color2 = cv2.applyColorMap(gray_img, lut2)
 
     """
     try:
