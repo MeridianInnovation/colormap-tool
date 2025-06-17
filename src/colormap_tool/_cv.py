@@ -16,12 +16,8 @@ from colormap_tool._cmps import CMPSPACE
 __all__ = ["get_cv_colormaps"]
 
 
-def get_cv_colormaps(name: str, namespace: str | None = None, return_arr: bool = False) -> int | np.ndarray:
+def get_cv_colormaps(name: str, namespace: str | None = None) -> int | np.ndarray:
     """Return a colormap suitable for OpenCV's cv2.applyColorMap.
-
-    - If the colormap is an OpenCV built-in, returns the OpenCV integer constant (e.g., cv2.COLORMAP_JET).
-    - If the colormap is from Matplotlib or custom, returns a (256, 1, 3) uint8 LUT in BGR order,
-      which can be passed directly to cv2.applyColorMap.
 
     Parameters
     ----------
@@ -29,8 +25,6 @@ def get_cv_colormaps(name: str, namespace: str | None = None, return_arr: bool =
         Colormap name. If namespace is None, use "namespace.name" format (e.g., "cv.jet", "mpl.viridis").
     namespace : str, optional
         "cv" for OpenCV, "mpl" for Matplotlib. If provided, name should not include a dot.
-    return_arr : bool, optional
-        If True, always return a LUT array (never an OpenCV constant).
 
     Returns
     -------
@@ -50,10 +44,6 @@ def get_cv_colormaps(name: str, namespace: str | None = None, return_arr: bool =
     >>> img_color2 = cv2.applyColorMap(gray_img, lut2)
 
     """
-    try:
-        import cv2
-    except ImportError:
-        cv2 = None
     if namespace is not None:
         if "." in name:
             raise ValueError(f"Namespace {namespace} is provided, so name {name} should not include a dot.")
@@ -67,12 +57,9 @@ def get_cv_colormaps(name: str, namespace: str | None = None, return_arr: bool =
     if name not in CMPSPACE[namespace]:
         raise ValueError(f"Colormap {name} is not found in namespace {namespace}.")
 
-    if namespace == "cv" and not return_arr and cv2 is not None:
-        return cv2.__dict__[f"COLORMAP_{name.upper()}"]
-    else:
-        rgb_arr = CMPSPACE[namespace][name]
-        bgr_arr = rgb_arr[:, :, ::-1]
-        return bgr_arr
+    rgb_arr = CMPSPACE[namespace][name]
+    bgr_arr = rgb_arr[:, :, ::-1]
+    return bgr_arr
 
 
 def apply_colormap_with_numpy(src: np.ndarray, cmp: np.ndarray, dst: np.ndarray | None = None) -> np.ndarray:
