@@ -1,3 +1,9 @@
+## v1.1.0 (2025-07-04)
+
+### Feat
+
+- Remove import cv from _cv.py
+
 ## v1.0.0 (2025-06-16)
 
 ### Feat
